@@ -110,8 +110,8 @@ cell.install_connection(cmf.Richards)
 # Und weil es eine Vielzahl von numerischen Verfahren gibt, müssen wir noch den Löser zur Berechnung der internen Flüsse bzw. des Gleichungssystems der Richardsgleichung definieren:
 # Definition des Lösers:
 #solver = cmf.CVodeKLU(project,1e-6)
-#solver = cmf.RKFIntegrator(project,1e-6)
-solver = cmf.CVodeIntegrator(project,1e-6)
+solver = cmf.RKFIntegrator(project,1e-6)
+#solver = cmf.CVodeIntegrator(project,1e-6)
 solver.t = cmf.Time(1,1,2011)
 
 
@@ -140,27 +140,32 @@ cell.surfacewater.depth = surfwat
 
 
 # RUN MODEL
-
-# start with initial conditions
-potential = [cell.layers.potential]
-moisture = [cell.layers.theta]
-tstep = 1./60. #hour
-# The run time loop:
-for t in solver.run(solver.t,
+@st.cache
+def runcmf():
+    # start with initial conditions
+    potential = [cell.layers.potential]
+    moisture = [cell.layers.theta]
+    tstep = 1./60. #hour
+    # The run time loop:
+    for t in solver.run(solver.t,
                     solver.t + timedelta(days=60),
                     timedelta(hours=tstep)):
-    potential.append(cell.layers.potential)
-    moisture.append(cell.layers.theta)
+        potential.append(cell.layers.potential)
+        moisture.append(cell.layers.theta)
+
+    a = np.arange(lz)
+    b = np.repeat('theta',lz)
+    c = np.repeat('psi',lz)
+    results = pd.concat([pd.Series(np.arange(len(moisture))*tstep),pd.DataFrame(np.array(moisture)),pd.DataFrame(np.array(potential))],axis=1)
+    results.columns = ['time_h']+[m+str(n) for m,n in zip(b,a)]+[m+str(n) for m,n in zip(c,a)]
+    return results
 
 
-a = np.arange(lz)
-b = np.repeat('theta',lz)
-c = np.repeat('psi',lz)
-results = pd.concat([pd.Series(np.arange(len(moisture))*tstep),pd.DataFrame(np.array(moisture)),pd.DataFrame(np.array(potential))],axis=1)
-results.columns = ['time_h']+[m+str(n) for m,n in zip(b,a)]+[m+str(n) for m,n in zip(c,a)]
-
-
-def plot_results(ti):
+def plot_results(results,ti):
+    a = np.arange(lz)
+    b = np.repeat('theta',lz)
+    c = np.repeat('psi',lz)
+    
     tix = np.where(results.time_h>=ti)[0][0]
 
     fig = plt.figure(figsize=(10,4),constrained_layout=True)
@@ -200,7 +205,11 @@ def plot_results(ti):
 
     return fig
 
-def plot_results_im(ti):
+def plot_results_im(results,ti):
+    a = np.arange(lz)
+    b = np.repeat('theta',lz)
+    c = np.repeat('psi',lz)
+    
     tix = np.where(results.time_h>=ti)[0][0]
 
     fig = plt.figure(figsize=(10,4),constrained_layout=True)
@@ -237,10 +246,11 @@ def plot_results_im(ti):
 
     return fig
 
+results = runcmf()
 implt = st.checkbox('Image Plot',value=False)
 ti = st.slider('time of experiment (h)', 0, 60*24, 100)
 if implt:
-    st.pyplot(plot_results_im(ti))
+    st.pyplot(plot_results_im(results,ti))
 else:
-    st.pyplot(plot_results(ti))
+    st.pyplot(plot_results(results,ti))
 
