@@ -83,45 +83,37 @@ else:
     r_curve = cmf.VanGenuchtenMualem(Ksat=ksat1,phi=0.5,alpha=alpha1,n=n1) #ksat in m/day >> 1.157e-05 m/s
 
 # Model settings
-# INITIALISE MODEL
-@st.cache
-def inicmf(lz,dz,r_curve,lay2,stepz,r_curve2):    
+# Definition eines CMF Projekts
+project = cmf.project()
 
-    # Definition eines CMF Projekts
-    project = cmf.project()
+# Nun definieren wir eine Retentionsfunktion für den Boden und fügen unserer Zelle die Bodenschichten mit jeweils 10 cm Mächtigkeit hinzu:
+# Definition einer Zelle an Position (0,0,0) mit einer Fläche von 1000 m2 und einem Wasserspeicher an der Oberfläche 
+cell = project.NewCell(x=0,y=0,z=0,area=1000, with_surfacewater=True)
 
-    # Nun definieren wir eine Retentionsfunktion für den Boden und fügen unserer Zelle die Bodenschichten mit jeweils 10 cm Mächtigkeit hinzu:
-    # Definition einer Zelle an Position (0,0,0) mit einer Fläche von 1000 m2 und einem Wasserspeicher an der Oberfläche 
-    cell = project.NewCell(x=0,y=0,z=0,area=1000, with_surfacewater=True)
 
-    # Hinzufügen von lz Schichten mit je dz Mächtigkeit und der oben definierten Retentionsfunktion
-    for i in range(lz):
-        depth = (i+1) * dz
-        if lay2:
-            if i<stepz:
-                cell.add_layer(depth,r_curve)
-            else:
-                cell.add_layer(depth,r_curve2)
-        else:
+
+# Hinzufügen von lz Schichten mit je dz Mächtigkeit und der oben definierten Retentionsfunktion
+for i in range(lz):
+    depth = (i+1) * dz
+    if lay2:
+        if i<stepz:
             cell.add_layer(depth,r_curve)
+        else:
+            cell.add_layer(depth,r_curve2)
+    else:
+        cell.add_layer(depth,r_curve)
 
 
-    # Die Zellen werden nun mit der Richards-Gleichung miteinander verbunden:
-    cell.install_connection(cmf.Richards)
+# Die Zellen werden nun mit der Richards-Gleichung miteinander verbunden:
+cell.install_connection(cmf.Richards)
 
-    # Und weil es eine Vielzahl von numerischen Verfahren gibt, müssen wir noch den Löser zur Berechnung der internen Flüsse bzw. des Gleichungssystems der Richardsgleichung definieren:
-    # Definition des Lösers:
-    #solver = cmf.CVodeKLU(project,1e-6)
-    #solver = cmf.RKFIntegrator(project,1e-6)
-    solver = cmf.CVodeIntegrator(project,1e-6)
-    solver.t = cmf.Time(1,1,2011)
-    return project, solver
+# Und weil es eine Vielzahl von numerischen Verfahren gibt, müssen wir noch den Löser zur Berechnung der internen Flüsse bzw. des Gleichungssystems der Richardsgleichung definieren:
+# Definition des Lösers:
+#solver = cmf.CVodeKLU(project,1e-6)
+solver = cmf.RKFIntegrator(project,1e-6)
+#solver = cmf.CVodeIntegrator(project,1e-6)
+solver.t = cmf.Time(1,1,2011)
 
-
-if lay2:
-    project, solver = inicmf(lz,dz,r_curve,lay2,stepz,r_curve2)
-else:
-    project, solver = inicmf(lz,dz,r_curve,lay2,None,None)
 
 # Nun haben wir eine Bodensäule, deren 10 Schichten mit der Richards-Gleichung in Verbindung stehen. Wie wir in der Vorlesung gelernt haben, kann nun nur etwas passieren, wenn es auch einen Gradienten im totalen hydraulischen Potenzial gibt. Diesen erzeugen wir in unserem Beispiel über die Anfangszustände.
 st.sidebar.subheader('Inital conditions and boundary conditions')
@@ -129,27 +121,27 @@ cellini = st.sidebar.slider('initial unsaturated state', -20., 0., -5.)
 gwpot = st.sidebar.slider('ground water potential', -10., 0., -1.)
 surfwat = st.sidebar.slider('surface water depth', 0., 0.5, 0.)
 
+# Dazu sehen wir uns einfach einmal an, wie die Bodensäule als unser Schwamm mit Kontakt zu einer Wasserfläche reagiert:
+# Definition eines Grundwasseranschlusses als Randbedingung
+gw = project.NewOutlet('groundwater',x=0,y=0,z=-1)
+# Definition der Grundwasserhöhe
+gw.potential = gwpot
+gw.is_source=True
+# Verbindung der untersten Zelle mit dem Grundwasser über die Richards-Gleichung
+gw_flux=cmf.Richards(cell.layers[-1],gw)
+
+# Definition der Anfangszustände im (ungeättigtem) Boden
+# Alle Bodenschichten sind ungesättigt mit einem Potenzial von -5 m
+cell.saturated_depth = -1.*cellini
+
+# Definition des Anfangszustandes an der Oberfläche
+# 0 mm Wasser zur Infiltration
+cell.surfacewater.depth = surfwat
+
+
 # BUILD and RUN MODEL
 @st.cache
-def runcmf(project,solver,cellini,gwpot,surfwat):    
-    # Dazu sehen wir uns einfach einmal an, wie die Bodensäule als unser Schwamm mit Kontakt zu einer Wasserfläche reagiert:
-    # Definition eines Grundwasseranschlusses als Randbedingung
-    gw = project.NewOutlet('groundwater',x=0,y=0,z=-1)
-    # Definition der Grundwasserhöhe
-    gw.potential = gwpot
-    gw.is_source=True
-    # Verbindung der untersten Zelle mit dem Grundwasser über die Richards-Gleichung
-    gw_flux=cmf.Richards(cell.layers[-1],gw)
-
-    # Definition der Anfangszustände im (ungeättigtem) Boden
-    # Alle Bodenschichten sind ungesättigt mit einem Potenzial von -5 m
-    cell.saturated_depth = -1.*cellini
-
-    # Definition des Anfangszustandes an der Oberfläche
-    # 0 mm Wasser zur Infiltration
-    cell.surfacewater.depth = surfwat
-
-
+def runcmf():
     # start with initial conditions
     potential = [cell.layers.potential]
     moisture = [cell.layers.theta]
@@ -254,7 +246,7 @@ def plot_results_im(results,ti):
 
     return fig
 
-results = runcmf(project,solver,cellini,gwpot,surfwat)
+results = runcmf()
 implt = st.checkbox('Image Plot',value=False)
 ti = st.slider('time of experiment (h)', 0, 60*24, 100)
 if implt:
