@@ -140,7 +140,7 @@ cell.surfacewater.depth = surfwat
 
 
 # RUN MODEL
-@st.cache
+#@st.cache
 def runcmf():
     # start with initial conditions
     potential = [cell.layers.potential]
