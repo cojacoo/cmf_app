@@ -109,8 +109,8 @@ cell.install_connection(cmf.Richards)
 
 # Und weil es eine Vielzahl von numerischen Verfahren gibt, müssen wir noch den Löser zur Berechnung der internen Flüsse bzw. des Gleichungssystems der Richardsgleichung definieren:
 # Definition des Lösers:
-solver = cmf.CVodeKLU(project,1e-6)
-#solver = cmf.RKFIntegrator(project,1e-6)
+#solver = cmf.CVodeKLU(project,1e-6)
+solver = cmf.RKFIntegrator(project,1e-6)
 #solver = cmf.CVodeIntegrator(project,1e-6)
 solver.t = cmf.Time(1,1,2011)
 
