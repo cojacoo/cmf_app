@@ -41,6 +41,7 @@ def plot_rc(retcurve):
     ax2.set_ylabel(r'$K(\theta) (m day^{-1})$')
     ax2.set_yscale('log')
 
+    return fig
 
 
 # Description
