@@ -1,1 +1,1 @@
-web: sh setup.sh && streamlit run 1Drichards_streamlit.py
+web: sh setup.sh && streamlit run bucket_streamlit.py
