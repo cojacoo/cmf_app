@@ -1,16 +1,13 @@
-# Simple Bucket Model
+# Simple CMF Hydropedological Model
 
 This is a simple hydrological bucket model for the illustration of the main concept of cascading stores.
 
-You can find a live deploy on https://cmf.herokuapp.com
+You can find a live deploy on [streamlit](https://cojacoo-cmf-app-1drichards-streamlit-8b7xfj.streamlit.app/)
 
 
-<!---# Simple CMF Hydropedological Model
+# Simple Bucket Model
 
-This is a simple 1D hydrological model for the illustration of the main concept of a richards-type soil column.
-
-You can find a live deploy on https://cmf.herokuapp.com--->
-
-
+There is also a simple hydrological bucket model for the illustration of the main concept of cascading stores.
 All data is without any liability and originates from presentations of regional authorities.
+
 Please join, fork, reuse...
