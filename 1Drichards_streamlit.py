@@ -232,7 +232,7 @@ def plot_results_im(results,ti):
     ax3 = fig.add_subplot(gs[0, 1:])
     plt1 = ax3.imshow(results[[m+str(n) for m,n in zip(b,a)]].values.T,aspect=2300,cmap='Blues',vmin=0.09,vmax=0.6)
     ax3.set_ylabel('Bodenschicht')
-    fig.colorbar(plt1, ax = ax3, label='$\theta (m^3m^{-3})$')
+    fig.colorbar(plt1, ax = ax3, label=r'$\theta (m^3m^{-3})$')
     ax3.set_title('Entwicklung der Bodenfeuchte')
     ax3.set_aspect('auto')
 
@@ -240,7 +240,7 @@ def plot_results_im(results,ti):
     plt2 = ax4.imshow(results[[m+str(n) for m,n in zip(c,a)]].values.T,aspect=2300,cmap='viridis_r')
     ax4.set_xlabel('Zeit (min)')
     ax4.set_ylabel('Bodenschicht')
-    fig.colorbar(plt2, ax = ax4, label='$\psi_{tot}$ (m)')
+    fig.colorbar(plt2, ax = ax4, label=r'$\psi_{tot}$ (m)')
     #ax4.plot([results.loc[tix,'time_h']*60.,results.loc[tix,'time_h']*60.],[0,ly],':',c='gray')
     ax4.set_title('Entwicklung des totalen hydraulischen Potenzials')
     ax4.set_aspect('auto')
