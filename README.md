@@ -2,7 +2,7 @@
 
 This is a simple hydrological bucket model for the illustration of the main concept of cascading stores.
 
-You can find a live deploy on [streamlit](https://cojacoo-cmf-app-1drichards-streamlit-8b7xfj.streamlit.app/)
+You can find a live deploy on [streamlit](https://1drichards.streamlit.app/)
 
 
 # Simple Bucket Model
